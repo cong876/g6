@@ -1,7 +1,7 @@
 const min = Math.min;
 const max = Math.max;
 const abs = Math.abs;
-const hypot = Math.hypot;
+// const hypot = Math.hypot;
 
 module.exports = {
   getDefaultCfg() {
@@ -14,6 +14,7 @@ module.exports = {
       },
       onSelect() {},
       onDeselect() {},
+      keyCode: 17,
       selectedState: 'selected',
       includeEdges: true,
       selectedEdges: [],
@@ -25,10 +26,18 @@ module.exports = {
       mousedown: 'onMouseDown',
       mousemove: 'onMouseMove',
       mouseup: 'onMouseUp',
-      'canvas:click': 'clearStates'
+      'canvas:click': 'clearStates',
+      keyup: 'onKeyUp',
+      keydown: 'onKeyDown'
     };
   },
   onMouseDown(e) {
+
+    /** 与drag-canvas 互斥 */
+    if (!this.keydown) {
+      return;
+    }
+
     // 按在node上面拖动时候不应该是框选
     const { item } = e;
     if (item) {
@@ -49,15 +58,18 @@ module.exports = {
     this.dragging = true;
   },
   onMouseMove(e) {
-    const originPoint = this.originPoint;
-    if (!this.dragging || hypot(originPoint.x - e.canvasX, originPoint.y - e.canvasY) < 10) {
+    // const originPoint = this.originPoint;
+    if (!this.dragging
+      // || hypot(originPoint.x - e.canvasX, originPoint.y - e.canvasY) < 10
+      ) {
       return;
     }
     this._updateBrush(e);
     this.graph.paint();
   },
   onMouseUp(e) {
-    if (!this.brush) {
+    /** 与drag-canvas 互斥 */
+    if (!this.keydown || !this.brush) {
       return;
     }
     const graph = this.graph;
@@ -155,5 +167,20 @@ module.exports = {
       x: min(e.canvasX, originPoint.x),
       y: min(e.canvasY, originPoint.y)
     });
+  },
+  onKeyDown(e) {
+    const code = e.keyCode || e.which;
+    if (code === this.keyCode) {
+      this.keydown = true;
+    } else {
+      this.keydown = false;
+    }
+  },
+  onKeyUp() {
+    if (this.brush) {
+      this.brush.hide();
+      this.dragging = false;
+    }
+    this.keydown = false;
   }
 };
