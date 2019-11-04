@@ -88,6 +88,10 @@ module.exports = {
     if (!this.brush) {
       return;
     }
+    
+    if (!this.dragging) {
+      return;
+    }
 
     if (this.trigger !== 'drag' && !this.keydown) {
       return;
